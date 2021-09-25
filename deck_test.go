@@ -9,7 +9,7 @@ import (
 func TestDraw(t *testing.T) {
 	is := is.NewRelaxed(t)
 	d := Deck{}
-	d.Cards = []Card{Card{"ONE", nil}, Card{"TWO", nil}}
+	d.Cards = []Card{{"ONE", nil}, {"TWO", nil}}
 	is.Equal(len(d.Cards), 2)
 	c, ok := d.Draw()
 	is.Equal(ok, true)

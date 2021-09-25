@@ -3,7 +3,7 @@ package main
 import "math/rand"
 
 type Deck struct {
-	Cards []card
+	Cards []Card
 }
 
 func (d *Deck) Shuffle() {
@@ -12,14 +12,24 @@ func (d *Deck) Shuffle() {
 	})
 }
 
+// Remove a card from the top of the deck, and return that card
+func (d *Deck) Draw() (Card, bool) {
+	if len(d.Cards) < 1 {
+		return Card{}, false
+	}
+	c := d.Cards[0]
+	d.Cards = d.Cards[1:]
+	return c, true
+}
+
 func NewStormDeck() Deck {
 	d := Deck{}
-	d.Cards = make([]card, 0, 31)
+	d.Cards = make([]Card, 0, 31)
 
 	directions := []string{"North", "South", "East", "West"}
 	for dir := range directions {
 		for i := 0; i < 3; i++ {
-			d.Cards = append(d.Cards, card{
+			d.Cards = append(d.Cards, Card{
 				CardType: "STORM_MOVES",
 				Storm: &stormCard{
 					Direction: directions[dir],
@@ -28,7 +38,7 @@ func NewStormDeck() Deck {
 			})
 		}
 		for i := 0; i < 2; i++ {
-			d.Cards = append(d.Cards, card{
+			d.Cards = append(d.Cards, Card{
 				CardType: "STORM_MOVES",
 				Storm: &stormCard{
 					Direction: directions[dir],
@@ -36,7 +46,7 @@ func NewStormDeck() Deck {
 				},
 			})
 		}
-		d.Cards = append(d.Cards, card{
+		d.Cards = append(d.Cards, Card{
 			CardType: "STORM_MOVES",
 			Storm: &stormCard{
 				Direction: directions[dir],
@@ -45,29 +55,29 @@ func NewStormDeck() Deck {
 		})
 	}
 	for i := 0; i < 3; i++ {
-		d.Cards = append(d.Cards, card{CardType: "STORM_PICKS_UP"})
+		d.Cards = append(d.Cards, Card{CardType: "STORM_PICKS_UP"})
 	}
 	for i := 0; i < 4; i++ {
-		d.Cards = append(d.Cards, card{CardType: "SUN_BEATS_DOWN"})
+		d.Cards = append(d.Cards, Card{CardType: "SUN_BEATS_DOWN"})
 	}
 	return d
 }
 
 func NewGearDeck() Deck {
 	d := Deck{}
-	d.Cards = make([]card, 0, 10)
+	d.Cards = make([]Card, 0, 10)
 	for i := 0; i < 3; i++ {
-		d.Cards = append(d.Cards, card{CardType: "DUNE_BLASTER"})
+		d.Cards = append(d.Cards, Card{CardType: "DUNE_BLASTER"})
 	}
 	for i := 0; i < 3; i++ {
-		d.Cards = append(d.Cards, card{CardType: "JET_PACK"})
+		d.Cards = append(d.Cards, Card{CardType: "JET_PACK"})
 	}
 	for i := 0; i < 2; i++ {
-		d.Cards = append(d.Cards, card{CardType: "SOLAR_SHIELD"})
+		d.Cards = append(d.Cards, Card{CardType: "SOLAR_SHIELD"})
 	}
 	for i := 0; i < 2; i++ {
-		d.Cards = append(d.Cards, card{CardType: "TERRASCOPE"})
+		d.Cards = append(d.Cards, Card{CardType: "TERRASCOPE"})
 	}
-	d.Cards = append(d.Cards, card{CardType: "SECRET_WATER_RESERVE"}, card{CardType: "TIME_THROTTLE"})
+	d.Cards = append(d.Cards, Card{CardType: "SECRET_WATER_RESERVE"}, Card{CardType: "TIME_THROTTLE"})
 	return d
 }

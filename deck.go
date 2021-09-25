@@ -15,65 +15,36 @@ func (d *Deck) Shuffle() {
 func NewStormDeck() Deck {
 	d := Deck{}
 	d.Cards = make([]card, 0, 10)
-	d.Cards = append(d.Cards,
-		card{
+
+	directions := []string{"North", "South", "East", "West"}
+	for dir := range directions {
+		for i := 0; i < 3; i++ {
+			d.Cards = append(d.Cards, card{
+				CardType: "STORM_MOVES",
+				Storm: &stormCard{
+					Direction: directions[dir],
+					Distance:  1,
+				},
+			})
+		}
+		for i := 0; i < 2; i++ {
+			d.Cards = append(d.Cards, card{
+				CardType: "STORM_MOVES",
+				Storm: &stormCard{
+					Direction: directions[dir],
+					Distance:  2,
+				},
+			})
+		}
+		d.Cards = append(d.Cards, card{
 			CardType: "STORM_MOVES",
 			Storm: &stormCard{
-				Direction: "North",
-				Distance:  1,
+				Direction: directions[dir],
+				Distance:  3,
 			},
-		},
-		card{
-			CardType: "STORM_MOVES",
-			Storm: &stormCard{
-				Direction: "East",
-				Distance:  1,
-			},
-		},
-		card{
-			CardType: "STORM_MOVES",
-			Storm: &stormCard{
-				Direction: "West",
-				Distance:  1,
-			},
-		},
-		card{
-			CardType: "STORM_MOVES",
-			Storm: &stormCard{
-				Direction: "South",
-				Distance:  1,
-			},
-		},
-		card{
-			CardType: "STORM_MOVES",
-			Storm: &stormCard{
-				Direction: "North",
-				Distance:  2,
-			},
-		},
-		card{
-			CardType: "STORM_MOVES",
-			Storm: &stormCard{
-				Direction: "East",
-				Distance:  2,
-			},
-		},
-		card{
-			CardType: "STORM_MOVES",
-			Storm: &stormCard{
-				Direction: "West",
-				Distance:  2,
-			},
-		},
-		card{
-			CardType: "STORM_MOVES",
-			Storm: &stormCard{
-				Direction: "South",
-				Distance:  2,
-			},
-		},
-	)
-	for i := 0; i < 4; i++ {
+		})
+	}
+	for i := 0; i < 3; i++ {
 		d.Cards = append(d.Cards, card{CardType: "STORM_PICKS_UP"})
 	}
 	for i := 0; i < 4; i++ {

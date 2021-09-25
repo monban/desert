@@ -11,6 +11,8 @@ func main() {
 	sd := NewStormDeck()
 	sd.Shuffle()
 	//js, _ := json.Marshal(sd)
-	fmt.Println(sd)
+	for i := range sd.Cards {
+		fmt.Println(sd.Cards[i])
+	}
 	//fmt.Println(string(js))
 }

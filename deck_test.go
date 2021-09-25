@@ -7,7 +7,7 @@ import (
 )
 
 func TestDraw(t *testing.T) {
-	is := is.New(t)
+	is := is.NewRelaxed(t)
 	d := Deck{}
 	d.Cards = []Card{Card{"ONE", nil}, Card{"TWO", nil}}
 	is.Equal(len(d.Cards), 2)
@@ -16,4 +16,12 @@ func TestDraw(t *testing.T) {
 	is.Equal(c.CardType, "ONE")
 	is.Equal(len(d.Cards), 1)
 	is.Equal(d.Cards[0].CardType, "TWO")
+}
+
+func TestAdd(t *testing.T) {
+	is := is.NewRelaxed(t)
+	d := Deck{}
+	d.Add(Card{"ONE", nil})
+	is.Equal(1, len(d.Cards))
+	is.Equal("ONE", d.Cards[0].CardType)
 }

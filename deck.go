@@ -22,6 +22,10 @@ func (d *Deck) Draw() (Card, bool) {
 	return c, true
 }
 
+func (d *Deck) Add(c Card) {
+	d.Cards = append(d.Cards, c)
+}
+
 func NewStormDeck() Deck {
 	d := Deck{}
 	d.Cards = make([]Card, 0, 31)

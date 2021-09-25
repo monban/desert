@@ -11,11 +11,18 @@ type Game struct {
 func NewGame() Game {
 	g := Game{}
 	g.StormDeck = NewStormDeck()
-	g.StormDeck = NewGearDeck()
+	g.GearDeck = NewGearDeck()
 	return g
 }
 
 func (g *Game) DrawStormCard() Card {
 	c, _ := g.StormDeck.Draw()
+	g.StormDiscard.Add(c)
+	return c
+}
+
+func (g *Game) DrawGearCard() Card {
+	c, _ := g.GearDeck.Draw()
+	g.GearDiscard.Add(c)
 	return c
 }

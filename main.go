@@ -10,9 +10,17 @@ func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	sd := NewStormDeck()
 	sd.Shuffle()
-	//js, _ := json.Marshal(sd)
+
+	gd := NewGearDeck()
+	gd.Shuffle()
+
+	fmt.Println("STORM DECK\n==========")
 	for i := range sd.Cards {
 		fmt.Println(sd.Cards[i])
 	}
-	//fmt.Println(string(js))
+
+	fmt.Println("\nGEAR DECK\n==========")
+	for i := range gd.Cards {
+		fmt.Println(gd.Cards[i])
+	}
 }

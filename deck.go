@@ -14,7 +14,7 @@ func (d *Deck) Shuffle() {
 
 func NewStormDeck() Deck {
 	d := Deck{}
-	d.Cards = make([]card, 0, 10)
+	d.Cards = make([]card, 0, 31)
 
 	directions := []string{"North", "South", "East", "West"}
 	for dir := range directions {
@@ -50,5 +50,24 @@ func NewStormDeck() Deck {
 	for i := 0; i < 4; i++ {
 		d.Cards = append(d.Cards, card{CardType: "SUN_BEATS_DOWN"})
 	}
+	return d
+}
+
+func NewGearDeck() Deck {
+	d := Deck{}
+	d.Cards = make([]card, 0, 10)
+	for i := 0; i < 3; i++ {
+		d.Cards = append(d.Cards, card{CardType: "DUNE_BLASTER"})
+	}
+	for i := 0; i < 3; i++ {
+		d.Cards = append(d.Cards, card{CardType: "JET_PACK"})
+	}
+	for i := 0; i < 2; i++ {
+		d.Cards = append(d.Cards, card{CardType: "SOLAR_SHIELD"})
+	}
+	for i := 0; i < 2; i++ {
+		d.Cards = append(d.Cards, card{CardType: "TERRASCOPE"})
+	}
+	d.Cards = append(d.Cards, card{CardType: "SECRET_WATER_RESERVE"}, card{CardType: "TIME_THROTTLE"})
 	return d
 }

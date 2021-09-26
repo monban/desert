@@ -1,4 +1,4 @@
-package main
+package desert
 
 type Game struct {
 	StormDeck    Deck

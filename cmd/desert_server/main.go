@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/monban/desert"
 )
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	g := NewGame()
+	g := desert.NewGame()
 	sd := &g.StormDeck
 	sdis := &g.StormDiscard
 	gd := &g.GearDeck

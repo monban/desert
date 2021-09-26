@@ -11,7 +11,9 @@ type Game struct {
 func NewGame() Game {
 	g := Game{}
 	g.StormDeck = NewStormDeck()
+	g.StormDeck.Shuffle()
 	g.GearDeck = NewGearDeck()
+	g.GearDeck.Shuffle()
 	return g
 }
 

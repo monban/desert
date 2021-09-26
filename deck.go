@@ -22,10 +22,12 @@ func (d *Deck) Draw() (Card, bool) {
 	return c, true
 }
 
+// Add a card to the deck
 func (d *Deck) Add(c Card) {
 	d.Cards = append(d.Cards, c)
 }
 
+// Create a default Storm deck
 func NewStormDeck() Deck {
 	d := Deck{}
 	d.Cards = make([]Card, 0, 31)
@@ -67,6 +69,7 @@ func NewStormDeck() Deck {
 	return d
 }
 
+// Create a default Gear deck
 func NewGearDeck() Deck {
 	d := Deck{}
 	d.Cards = make([]Card, 0, 10)

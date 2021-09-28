@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/monban/desert"
 	"github.com/nats-io/nats.go"
 )
 
@@ -25,7 +26,7 @@ func main() {
 }
 
 func runServer(ctx context.Context) error {
-	gm := &gameManager{}
+	gm := &desert.GameManager{}
 	opts := nats.Options{
 		Name: "desert",
 	}
@@ -41,11 +42,11 @@ func runServer(ctx context.Context) error {
 	return nil
 }
 
-func handleNewGames(ctx context.Context, c chan *nats.Msg, gm *gameManager) {
+func handleNewGames(ctx context.Context, c chan *nats.Msg, gm *desert.GameManager) {
 	for {
 		select {
 		case msg := <-c:
-			id, _ := gm.newGame(string(msg.Data))
+			id, _ := gm.NewGame(string(msg.Data))
 			msg.Respond([]byte(fmt.Sprintf("%+v", id)))
 		case <-ctx.Done():
 			log.Println(ctx.Err())

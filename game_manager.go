@@ -1,32 +1,30 @@
-package main
+package desert
 
 import (
 	"log"
-
-	"github.com/monban/desert"
 )
 
 type GameId uint64
 
 const maxGameId GameId = ^GameId(0)
 
-type gameManager struct {
-	games map[GameId]*desert.Game
+type GameManager struct {
+	games map[GameId]*Game
 }
 
-func (g *gameManager) newGame(name string) (GameId, error) {
+func (g *GameManager) NewGame(name string) (GameId, error) {
 	if g.games == nil {
-		g.games = make(map[GameId]*desert.Game)
+		g.games = make(map[GameId]*Game)
 	}
 	nextId := g.nextGameId()
-	game := desert.NewGame()
+	game := NewGame()
 	g.games[nextId] = &game
 	log.Printf("Created new game with id %v, named %v", nextId, name)
 
 	return nextId, nil
 }
 
-func (g *gameManager) nextGameId() GameId {
+func (g *GameManager) nextGameId() GameId {
 	var nextId GameId
 	for nextId = 0; nextId < maxGameId; nextId++ {
 		if _, ok := g.games[nextId]; ok == false {

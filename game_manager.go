@@ -24,6 +24,13 @@ func (g *GameManager) NewGame(name string) (GameId, error) {
 	return nextId, nil
 }
 
+func (g *GameManager) FindGame(id GameId) *Game {
+	if g, ok := g.games[id]; ok {
+		return g
+	}
+	return nil
+}
+
 func (g *GameManager) nextGameId() GameId {
 	var nextId GameId
 	for nextId = 0; nextId < maxGameId; nextId++ {

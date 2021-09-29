@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/monban/desert"
@@ -34,23 +35,36 @@ func runServer(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	ch := make(chan *nats.Msg)
-	_, err = nc.ChanSubscribe("GAMES.NEW", ch)
-	handleNewGames(ctx, ch, gm)
+	go handleNewGames(ctx, nc, gm)
 	log.Println("Draining connection")
 	nc.Drain()
 	return nil
 }
 
-func handleNewGames(ctx context.Context, c chan *nats.Msg, gm *desert.GameManager) {
+func handleNewGames(ctx context.Context, nc *nats.Conn, gm *desert.GameManager) {
+	ch := make(chan *nats.Msg)
+	nc.ChanSubscribe("GAMES.NEW", ch)
 	for {
 		select {
-		case msg := <-c:
+		case msg := <-ch:
 			id, _ := gm.NewGame(string(msg.Data))
 			msg.Respond([]byte(fmt.Sprintf("%+v", id)))
 		case <-ctx.Done():
 			log.Println(ctx.Err())
-			return
+		}
+	}
+}
+
+func handleCardDraws(ctx context.Context, nc *nats.Conn, gm *desert.GameManager) {
+	ch := make(chan *nats.Msg)
+	nc.ChanSubscribe("GAME.*.DRAW.>", ch)
+	for {
+		select {
+		case msg := <-ch:
+			sub := strings.Split(msg.Subject, ".")
+			//msg.Respond([]byte(fmt.Sprintf("%+v", id)))
+		case <-ctx.Done():
+			log.Println(ctx.Err())
 		}
 	}
 }

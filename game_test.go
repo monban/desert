@@ -9,17 +9,17 @@ import (
 func TestDrawStormCard(t *testing.T) {
 	is := is.NewRelaxed(t)
 	g := NewGame()
-	ol := len(g.StormDeck.Cards)
+	ol := len(g.StormDeck.cards)
 	c := g.DrawStormCard()
-	is.Equal(c, g.StormDiscard.Cards[0])
-	is.Equal(ol-1, len(g.StormDeck.Cards))
+	is.Equal(c, g.StormDiscard.cards[0])
+	is.Equal(ol-1, len(g.StormDeck.cards))
 }
 
 func TestDrawGearCard(t *testing.T) {
 	is := is.NewRelaxed(t)
 	g := NewGame()
-	ol := len(g.GearDeck.Cards)
+	ol := len(g.GearDeck.cards)
 	c := g.DrawGearCard()
-	is.Equal(c, g.GearDiscard.Cards[0])
-	is.Equal(ol-1, len(g.GearDeck.Cards))
+	is.Equal(c, g.GearDiscard.cards[0])
+	is.Equal(ol-1, len(g.GearDeck.cards))
 }

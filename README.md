@@ -4,7 +4,7 @@
 [![Go Report Card][ReportCard-Image]][ReportCard-Url]
 
 [License-Url]: https://www.gnu.org/licenses/agpl-3.0.en.html
-[License-Image]: https://img.shields.io/badge/License-AGPL-blue.svg?style=for-the-badge
+[License-Image]: https://img.shields.io/badge/License-AGPL--3.0-blue.svg?style=for-the-badge
 [Go-Version-Image]: https://img.shields.io/github/go-mod/go-version/monban/desert.svg?style=for-the-badge
 [GoDoc-Url]: https://pkg.go.dev/github.com/monban/desert
 [GoDoc-Image]: https://img.shields.io/badge/GoDoc-Reference-blue.svg?style=for-the-badge

@@ -9,19 +9,35 @@ import (
 func TestDraw(t *testing.T) {
 	is := is.NewRelaxed(t)
 	d := Deck{}
-	d.Cards = []Card{{"ONE", nil}, {"TWO", nil}}
-	is.Equal(len(d.Cards), 2)
+	d.cards = []Card{{"ONE", nil}, {"TWO", nil}}
+	is.Equal(len(d.cards), 2)
 	c, ok := d.Draw()
 	is.Equal(ok, true)
 	is.Equal(c.CardType, "ONE")
-	is.Equal(len(d.Cards), 1)
-	is.Equal(d.Cards[0].CardType, "TWO")
+	is.Equal(len(d.cards), 1)
+	is.Equal(d.cards[0].CardType, "TWO")
 }
 
 func TestAdd(t *testing.T) {
 	is := is.NewRelaxed(t)
 	d := Deck{}
 	d.Add(Card{"ONE", nil})
-	is.Equal(1, len(d.Cards))
-	is.Equal("ONE", d.Cards[0].CardType)
+	is.Equal(1, len(d.cards))
+	is.Equal("ONE", d.cards[0].CardType)
+}
+
+func TestWatchDraw(t *testing.T) {
+	is := is.NewRelaxed(t)
+	var receivedCard Card
+	var sentCard Card = Card{"ONE", nil}
+	fn := func(c Card) {
+		receivedCard = c
+	}
+	d := Deck{}
+	d.Add(sentCard)
+
+	d.WatchDraw(fn)
+	d.Draw()
+
+	is.Equal(sentCard, receivedCard)
 }

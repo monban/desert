@@ -28,16 +28,16 @@ func TestAdd(t *testing.T) {
 
 func TestWatchDraw(t *testing.T) {
 	is := is.NewRelaxed(t)
-	var receivedCard Card
+	var a DeckAction
 	var sentCard Card = Card{"ONE", nil}
-	fn := func(c Card) {
-		receivedCard = c
+	fn := func(da DeckAction) {
+		a = da
 	}
 	d := Deck{}
 	d.Add(sentCard)
 
-	d.WatchDraw(fn)
+	d.Watch(fn)
 	d.Draw()
 
-	is.Equal(sentCard, receivedCard)
+	is.Equal(sentCard, *a.Card)
 }

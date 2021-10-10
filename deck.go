@@ -3,14 +3,20 @@ package desert
 import "math/rand"
 
 type Deck struct {
-	cards        []Card
-	drawWatchers []func(Card)
+	cards    []Card
+	watchers []func(DeckAction)
+}
+
+type DeckAction struct {
+	Action string
+	Card   *Card
 }
 
 func (d *Deck) Shuffle() {
 	rand.Shuffle(len(d.cards), func(i, j int) {
 		d.cards[i], d.cards[j] = d.cards[j], d.cards[i]
 	})
+	d.notifyWatchers("shuffle", nil)
 }
 
 // Remove a card from the top of the deck, and return that card
@@ -20,22 +26,26 @@ func (d *Deck) Draw() (Card, bool) {
 	}
 	c := d.cards[0]
 	d.cards = d.cards[1:]
-	d.notifyDrawWatchers(c)
+	d.notifyWatchers("draw", &c)
 	return c, true
 }
 
 // Add a card to the deck
 func (d *Deck) Add(c Card) {
 	d.cards = append(d.cards, c)
+	d.notifyWatchers("add", &c)
 }
 
-func (d *Deck) WatchDraw(fn func(Card)) {
-	d.drawWatchers = append(d.drawWatchers, fn)
+func (d *Deck) Watch(fn func(DeckAction)) {
+	d.watchers = append(d.watchers, fn)
 }
 
-func (d *Deck) notifyDrawWatchers(c Card) {
-	for _, w := range d.drawWatchers {
-		w(c)
+func (d *Deck) notifyWatchers(action string, c *Card) {
+	for _, fn := range d.watchers {
+		fn(DeckAction{
+			Action: action,
+			Card:   c,
+		})
 	}
 }
 

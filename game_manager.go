@@ -17,7 +17,7 @@ func (g *GameManager) NewGame(name string) (GameId, error) {
 		g.games = make(map[GameId]*Game)
 	}
 	nextId := g.nextGameId()
-	game := NewGame()
+	game := NewGame(nextId, name)
 	g.games[nextId] = &game
 	log.Printf("Created new game with id %v, named %v", nextId, name)
 

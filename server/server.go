@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -23,13 +24,31 @@ func Run(ctx context.Context) error {
 	}
 	r := router.Router{Routes: []router.Route{
 		{"GAMES.NEW", createNewGameHandler(gm, nc)},
-		{"GAME.*.DRAW.*", createCardDrawHandler(gm)},
+		{"GAME.*.ACTION", createGameActionHandler(gm)},
 	}}
 	r.ListenAndHandle(ctx, nc)
 	<-ctx.Done()
 	log.Println("Draining connection")
 	nc.Drain()
 	return nil
+}
+
+func createGameActionHandler(gm *desert.GameManager) router.HandlerFunc {
+	return func(ctx context.Context, msg *nats.Msg) {
+		gid, _ := strconv.Atoi(strings.Split(msg.Subject, ".")[1])
+		game := gm.FindGame(desert.GameId(gid))
+		if game == nil {
+			log.Printf("Unable to find game with id %d!", gid)
+			return
+		}
+
+		action := &desert.GameAction{}
+		err := json.Unmarshal(msg.Data, action)
+		if err != nil {
+			log.Printf("Error decoding json %s to action", msg.Data)
+		}
+		game.HandleAction(*action)
+	}
 }
 
 func createNewGameHandler(gm *desert.GameManager, nc *nats.Conn) router.HandlerFunc {

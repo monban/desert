@@ -12,7 +12,7 @@ type GameManager struct {
 	games map[GameId]*Game
 }
 
-func (g *GameManager) NewGame(name string) (GameId, error) {
+func (g *GameManager) NewGame(name string) (Game, error) {
 	if g.games == nil {
 		g.games = make(map[GameId]*Game)
 	}
@@ -21,7 +21,7 @@ func (g *GameManager) NewGame(name string) (GameId, error) {
 	g.games[nextId] = &game
 	log.Printf("Created new game with id %v, named %v", nextId, name)
 
-	return nextId, nil
+	return game, nil
 }
 
 func (g *GameManager) FindGame(id GameId) *Game {

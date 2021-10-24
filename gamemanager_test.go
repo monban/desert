@@ -16,6 +16,6 @@ func TestNewGame(t *testing.T) {
 func TestFindGame(t *testing.T) {
 	is := is.New(t)
 	gm := GameManager{}
-	id, _ := gm.NewGame("foo")
-	is.Equal(gm.FindGame(id), gm.games[0])
+	g, _ := gm.NewGame("foo")
+	is.Equal(gm.FindGame(g.Id), gm.games[0])
 }

@@ -1,0 +1,41 @@
+body {
+  background-color: black;
+  color: #aaa;
+}
+.facedown_deck {
+  display:flex;
+  width: 4em;
+  height: 6em;
+  background-color: #333;
+  justify-content:center;
+  align-items:flex-end;
+  padding: 0.5em;
+}
+
+.facedown_deck span {
+  display:flex;
+  width: 4em;
+  height: 6em;
+  background-color: #333;
+  justify-content:center;
+  align-items:flex-end;
+}
+.faceup_deck {
+  display:flex;
+  width: 4em;
+  height: 6em;
+  background-color: #aaa;
+  color: #000;
+  justify-content:center;
+  align-items:flex-end;
+  padding: 0.5em;
+}
+
+.facedup_deck span {
+  display:flex;
+  width: 4em;
+  height: 6em;
+  background-color: #333;
+  justify-content:center;
+  align-items:flex-end;
+}

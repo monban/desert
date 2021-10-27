@@ -13,20 +13,14 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-func Run(ctx context.Context) error {
+func Run(ctx context.Context, nc *nats.Conn) error {
 	gm := &desert.GameManager{}
-	opts := nats.Options{
-		Name: "desert",
-	}
-	nc, err := opts.Connect()
-	if err != nil {
-		return err
-	}
-	r := router.Router{Routes: []router.Route{
-		{"GAMES.NEW", createNewGameHandler(gm, nc)},
-		{"GAME.*.ACTION", createGameActionHandler(gm)},
-	}}
-	r.ListenAndHandle(ctx, nc)
+	r := router.New(ctx, nc, 1)
+	r.Route("GAMES.NEW", createNewGameHandler(gm, nc))
+	r.Route("GAME.*.ACTION", createGameActionHandler(gm))
+	r.Route(">", func(ctx context.Context, msg *nats.Msg) {
+		fmt.Println(msg)
+	})
 	<-ctx.Done()
 	log.Println("Draining connection")
 	nc.Drain()
@@ -44,6 +38,7 @@ func createGameActionHandler(gm *desert.GameManager) router.HandlerFunc {
 
 		action := &desert.GameAction{}
 		err := json.Unmarshal(msg.Data, action)
+		log.Printf("%+v\n", action)
 		if err != nil {
 			log.Printf("Error decoding json %s to action", msg.Data)
 		}
@@ -51,15 +46,20 @@ func createGameActionHandler(gm *desert.GameManager) router.HandlerFunc {
 	}
 }
 
+type NewGameData struct {
+	Name string `json:"name"`
+}
+
 func createNewGameHandler(gm *desert.GameManager, nc *nats.Conn) router.HandlerFunc {
 	return func(ctx context.Context, msg *nats.Msg) {
-		id, _ := gm.NewGame(string(msg.Data))
-		g := gm.FindGame(id)
-		createDeckBroadcaster(nc, id, &g.StormDeck, "STORM")
-		createDeckBroadcaster(nc, id, &g.StormDiscard, "STORM_DISCARD")
-		createDeckBroadcaster(nc, id, &g.GearDeck, "GEAR")
-		createDeckBroadcaster(nc, id, &g.GearDiscard, "GEAR_DISCARD")
-		msg.Respond([]byte(fmt.Sprintf("%+v", id)))
+		var ngd NewGameData
+		json.Unmarshal(msg.Data, &ngd)
+		g, _ := gm.NewGame(ngd.Name)
+		createDeckBroadcaster(nc, g.Id, &g.StormDeck, "STORM")
+		createDeckBroadcaster(nc, g.Id, &g.StormDiscard, "STORM_DISCARD")
+		createDeckBroadcaster(nc, g.Id, &g.GearDeck, "GEAR")
+		createDeckBroadcaster(nc, g.Id, &g.GearDiscard, "GEAR_DISCARD")
+		msg.Respond([]byte(fmt.Sprintf("%+v", g.Id)))
 	}
 }
 

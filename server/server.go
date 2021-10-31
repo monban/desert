@@ -9,26 +9,23 @@ import (
 	"strings"
 
 	"github.com/monban/desert"
-	router "github.com/monban/nats.router"
 	"github.com/nats-io/nats.go"
 )
 
 func Run(ctx context.Context, nc *nats.Conn) error {
 	gm := &desert.GameManager{}
-	r := router.New(ctx, nc, 1)
-	r.Route("GAMES.NEW", createNewGameHandler(gm, nc))
-	r.Route("GAME.*.ACTION", createGameActionHandler(gm))
-	r.Route(">", func(ctx context.Context, msg *nats.Msg) {
-		fmt.Println(msg)
-	})
+	nc.Subscribe("GAMES.NEW", createNewGameHandler(nc, gm))
+	nc.Subscribe("GAMES.LIST", createGameListHandler(nc, gm))
+	nc.Subscribe("GAME.*.ACTION", createGameActionHandler(nc, gm))
+
 	<-ctx.Done()
 	log.Println("Draining connection")
 	nc.Drain()
 	return nil
 }
 
-func createGameActionHandler(gm *desert.GameManager) router.HandlerFunc {
-	return func(ctx context.Context, msg *nats.Msg) {
+func createGameActionHandler(nc *nats.Conn, gm *desert.GameManager) nats.MsgHandler {
+	return func(msg *nats.Msg) {
 		gid, _ := strconv.Atoi(strings.Split(msg.Subject, ".")[1])
 		game := gm.FindGame(desert.GameId(gid))
 		if game == nil {
@@ -38,7 +35,7 @@ func createGameActionHandler(gm *desert.GameManager) router.HandlerFunc {
 
 		action := &desert.GameAction{}
 		err := json.Unmarshal(msg.Data, action)
-		log.Printf("%+v\n", action)
+		log.Printf("Game %d action: %+v\n", game.Id, action)
 		if err != nil {
 			log.Printf("Error decoding json %s to action", msg.Data)
 		}
@@ -46,40 +43,20 @@ func createGameActionHandler(gm *desert.GameManager) router.HandlerFunc {
 	}
 }
 
-type NewGameData struct {
-	Name string `json:"name"`
-}
-
-func createNewGameHandler(gm *desert.GameManager, nc *nats.Conn) router.HandlerFunc {
-	return func(ctx context.Context, msg *nats.Msg) {
-		var ngd NewGameData
-		json.Unmarshal(msg.Data, &ngd)
-		g, _ := gm.NewGame(ngd.Name)
+func createNewGameHandler(nc *nats.Conn, gm *desert.GameManager) nats.MsgHandler {
+	return func(msg *nats.Msg) {
+		var ngd desert.NewGameData
+		if err := json.Unmarshal(msg.Data, &ngd); err != nil {
+			log.Printf("Unable to unmarshal %s to new game data", string(msg.Data))
+			return
+		}
+		log.Printf("Creating a new game: %+v", ngd)
+		g, _ := gm.NewGame(ngd)
 		createDeckBroadcaster(nc, g.Id, &g.StormDeck, "STORM")
 		createDeckBroadcaster(nc, g.Id, &g.StormDiscard, "STORM_DISCARD")
 		createDeckBroadcaster(nc, g.Id, &g.GearDeck, "GEAR")
 		createDeckBroadcaster(nc, g.Id, &g.GearDiscard, "GEAR_DISCARD")
 		msg.Respond([]byte(fmt.Sprintf("%+v", g.Id)))
-	}
-}
-
-func createCardDrawHandler(gm *desert.GameManager) router.HandlerFunc {
-	return func(ctx context.Context, msg *nats.Msg) {
-		log.Println("Drawing a card")
-		sub := strings.Split(msg.Subject, ".")
-		id, _ := strconv.ParseUint(sub[1], 10, 64)
-		gid := desert.GameId(id)
-		deck := sub[3]
-		log.Printf("Deck: %v", deck)
-		g := gm.FindGame(gid)
-		var card desert.Card
-		switch deck {
-		case "storm":
-			card = g.DrawStormCard()
-		case "gear":
-			card = g.DrawGearCard()
-		}
-		msg.Respond([]byte(fmt.Sprintf("%+v", card)))
 	}
 }
 
@@ -90,4 +67,14 @@ func createDeckBroadcaster(nc *nats.Conn, gid desert.GameId, d *desert.Deck, dec
 		nc.Publish(subj, []byte(msg))
 	}
 	d.Watch(fn)
+}
+func createGameListHandler(nc *nats.Conn, gm *desert.GameManager) nats.MsgHandler {
+	return func(msg *nats.Msg) {
+		data, err := json.Marshal(gm.ListGames())
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		msg.Respond(data)
+	}
 }

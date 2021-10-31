@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/matryer/is v1.4.0
-	github.com/monban/nats.router v0.0.0-20211024234601-86ef1caa8eae
 	github.com/nats-io/nats-server/v2 v2.6.2
 	github.com/nats-io/nats.go v1.13.0
 )

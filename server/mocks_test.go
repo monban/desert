@@ -24,12 +24,12 @@ type MockDaWatcher struct {
 	calls struct {
 		Watch struct {
 			receives struct {
-				fn func(desert.DeckAction)
+				fn func(desert.DeckEvent)
 			}
 		}
 	}
 }
 
-func (w *MockDaWatcher) Watch(fn func(desert.DeckAction)) {
+func (w *MockDaWatcher) Watch(fn func(desert.DeckEvent)) {
 	w.calls.Watch.receives.fn = fn
 }

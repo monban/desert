@@ -29,12 +29,14 @@ func createGameActionHandler(nc *nats.Conn, gm *desert.GameManager) nats.MsgHand
 		}
 
 		action := &desert.GameAction{}
-		err := json.Unmarshal(msg.Data, action)
-		log.Printf("Game %d action: %+v\n", game.Id, action)
-		if err != nil {
+		if err := json.Unmarshal(msg.Data, action); err != nil {
 			log.Printf("Error decoding json %s to action", msg.Data)
+			return
 		}
-		game.HandleAction(*action)
+
+		if err := game.HandleAction(*action); err != nil {
+			log.Printf("Error handling action %+v: %s", action, err.Error())
+		}
 	}
 }
 
@@ -60,15 +62,17 @@ type Publisher interface {
 }
 
 type DaWatcher interface {
-	Watch(func(desert.DeckAction))
+	Watch(func(desert.DeckEvent))
 }
 
 func createDeckBroadcaster(nc Publisher, gid desert.GameId, d DaWatcher, deckName string) {
-	fn := func(a desert.DeckAction) {
-		subj := fmt.Sprintf("GAME.%d.DECKS.%v", gid, deckName)
-		log.Printf("Sending events for game %d deck %s to subject %s", gid, deckName, subj)
-		msg := fmt.Sprintf("%+v", a)
-		nc.Publish(subj, []byte(msg))
+	subj := fmt.Sprintf("GAME.%d.DECKS.%v", gid, deckName)
+	fn := func(a desert.DeckEvent) {
+		data, err := json.Marshal(a)
+		if err != nil {
+			log.Printf("Error marshaling %+v to json: %v", a, err)
+		}
+		nc.Publish(subj, data)
 	}
 	d.Watch(fn)
 }

@@ -26,7 +26,7 @@ func TestCreateDeckBroadcaster(t *testing.T) {
 	is := is.New(t)
 	mp := &MockPublisher{}
 	daw := &MockDaWatcher{}
-	da := desert.DeckAction{Action: "draw", Card: &desert.Card{}}
+	da := desert.DeckEvent{Action: "draw", Card: &desert.Card{}}
 	daJson, _ := json.Marshal(da)
 
 	// Create a deck broadcaster
@@ -34,7 +34,7 @@ func TestCreateDeckBroadcaster(t *testing.T) {
 	// Ensure something was passed to the Watch function
 	is.True(daw.calls.Watch.receives.fn != nil)
 
-	// Call whatever was passed to Watch
+	// A function was passed to Watch, call it now
 	daw.calls.Watch.receives.fn(da)
 
 	// Check subject
@@ -45,17 +45,16 @@ func TestCreateDeckBroadcaster(t *testing.T) {
 }
 
 func TestSomething(t *testing.T) {
+	is := is.New(t)
+	gameAction := desert.GameAction{Action: "stormdraw"}
 	RunServer(func(nc *nats.Conn) {
+		ec, _ := nats.NewEncodedConn(nc, "json")
 		nc.Subscribe(">", func(msg *nats.Msg) { t.Log("nats subj:", msg.Subject, "nats msg: ", string(msg.Data)) })
 		wait := make(chan struct{})
-		type action struct {
-			Action string
-		}
-		//is := is.New(t)
-		ctx, done := context.WithTimeout(context.Background(), time.Second*2)
+		ctx, done := context.WithTimeout(context.Background(), time.Second)
 		defer done()
-		nc.Subscribe("GAMES.0.DECKS.>", func(msg *nats.Msg) {
-			t.Logf("%+v", msg.Data)
+		ec.Subscribe("GAME.0.DECKS.>", func(evt desert.DeckEvent) {
+			t.Logf("%+v", evt)
 			wait <- struct{}{}
 		})
 
@@ -64,15 +63,13 @@ func TestSomething(t *testing.T) {
 
 		// Create the game
 		reqData, _ := json.Marshal(desert.NewGameData{Name: "foo"})
-		res, err := nc.RequestWithContext(ctx, "GAMES.NEW", reqData)
+		_, err := nc.RequestWithContext(ctx, "GAMES.NEW", reqData)
 		if err != nil {
 			log.Fatal(err)
 		}
-		t.Log("response: ", string(res.Data))
 
 		// Draw a card
-		a := action{"drawstorm"}
-		actionData, _ := json.Marshal(a)
+		actionData, _ := json.Marshal(gameAction)
 		nc.Publish("GAME.0.ACTION", actionData)
 
 		// See if messages are published on the deck subject
@@ -80,7 +77,8 @@ func TestSomething(t *testing.T) {
 		case <-wait:
 			t.Log("the function was called")
 		case <-ctx.Done():
-			t.Fatal("function was not called")
+			t.Log("function was not called")
+			is.Fail()
 		}
 	})
 }

@@ -28,9 +28,10 @@ func TestAdd(t *testing.T) {
 
 func TestWatchDraw(t *testing.T) {
 	is := is.NewRelaxed(t)
-	var a DeckAction
+	var a DeckEvent
 	var sentCard Card = Card{"ONE", nil}
-	fn := func(da DeckAction) {
+	fn := func(da DeckEvent) {
+		t.Log(da)
 		a = da
 	}
 	d := Deck{}

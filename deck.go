@@ -1,15 +1,20 @@
 package desert
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 type Deck struct {
 	cards    []Card
-	watchers []func(DeckAction)
+	watchers []func(DeckEvent)
 }
 
-type DeckAction struct {
-	Action string
-	Card   *Card
+// A DeckEvent is a notification of a change happening to a Deck
+// Action will be one of "shuffle", "add", or "draw"
+type DeckEvent struct {
+	Action string `json:"action"`
+	Card   *Card  `json:"card"`
+	Length int    `json:"length"`
 }
 
 func (d *Deck) Shuffle() {
@@ -36,23 +41,30 @@ func (d *Deck) Add(c Card) {
 	d.notifyWatchers("add", &c)
 }
 
-func (d *Deck) Watch(fn func(DeckAction)) {
+// Add a callback function, to be triggered when the deck changes
+// The passed function should accept a DeckEvent
+func (d *Deck) Watch(fn func(DeckEvent)) {
+	if d.watchers == nil {
+		d.watchers = make([]func(DeckEvent), 0, 1)
+	}
 	d.watchers = append(d.watchers, fn)
 }
 
 func (d *Deck) notifyWatchers(action string, c *Card) {
 	for _, fn := range d.watchers {
-		fn(DeckAction{
+		fn(DeckEvent{
 			Action: action,
 			Card:   c,
+			Length: len(d.cards),
 		})
 	}
 }
 
 // Create a default Storm deck
-func NewStormDeck() Deck {
-	d := Deck{}
-	d.cards = make([]Card, 0, 31)
+func NewStormDeck() *Deck {
+	d := &Deck{
+		cards: make([]Card, 0, 31),
+	}
 
 	directions := []string{"North", "South", "East", "West"}
 	for dir := range directions {
@@ -92,9 +104,10 @@ func NewStormDeck() Deck {
 }
 
 // Create a default Gear deck
-func NewGearDeck() Deck {
-	d := Deck{}
-	d.cards = make([]Card, 0, 10)
+func NewGearDeck() *Deck {
+	d := &Deck{
+		cards: make([]Card, 0, 31),
+	}
 	for i := 0; i < 3; i++ {
 		d.cards = append(d.cards, Card{CardType: "DUNE_BLASTER"})
 	}

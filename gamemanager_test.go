@@ -9,8 +9,11 @@ import (
 func TestNewGame(t *testing.T) {
 	is := is.New(t)
 	gm := GameManager{}
-	gm.NewGame(NewGameData{"foo"})
+	ngd := NewGameData{Name: "Foo"}
+	g, err := gm.NewGame(ngd)
+	is.NoErr(err)
 	is.Equal(len(gm.games), 1)
+	is.Equal(ngd.Name, gm.games[g.Id].Name)
 }
 
 func TestFindGame(t *testing.T) {

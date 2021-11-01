@@ -16,13 +16,13 @@ type NewGameData struct {
 	Name string `json:"name"`
 }
 
-func (g *GameManager) NewGame(ngd NewGameData) (Game, error) {
+func (g *GameManager) NewGame(ngd NewGameData) (*Game, error) {
 	if g.games == nil {
 		g.games = make(map[GameId]*Game)
 	}
 	nextId := g.nextGameId()
 	game := NewGame(nextId, ngd.Name)
-	g.games[nextId] = &game
+	g.games[nextId] = game
 	log.Printf("Created new game with id %v, named %v", game.Id, game.Name)
 
 	return game, nil

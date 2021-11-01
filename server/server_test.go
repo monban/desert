@@ -2,9 +2,12 @@ package server
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"testing"
 	"time"
 
+	"github.com/matryer/is"
 	"github.com/monban/desert"
 	"github.com/nats-io/nats-server/v2/test"
 	"github.com/nats-io/nats.go"
@@ -18,9 +21,32 @@ func RunServer(fn func(*nats.Conn)) {
 	s.Shutdown()
 }
 
+func TestCreateDeckBroadcaster(t *testing.T) {
+	// Setup mocks
+	is := is.New(t)
+	mp := &MockPublisher{}
+	daw := &MockDaWatcher{}
+	da := desert.DeckAction{Action: "draw", Card: &desert.Card{}}
+	daJson, _ := json.Marshal(da)
+
+	// Create a deck broadcaster
+	createDeckBroadcaster(mp, desert.GameId(0), daw, "foo")
+	// Ensure something was passed to the Watch function
+	is.True(daw.calls.Watch.receives.fn != nil)
+
+	// Call whatever was passed to Watch
+	daw.calls.Watch.receives.fn(da)
+
+	// Check subject
+	is.Equal("GAME.0.DECKS.foo", mp.calls.Publish.receives.subj)
+
+	// Check data
+	is.Equal(string(daJson), string(mp.calls.Publish.receives.data))
+}
+
 func TestSomething(t *testing.T) {
 	RunServer(func(nc *nats.Conn) {
-		ec, _ := nats.NewEncodedConn(nc, "json")
+		nc.Subscribe(">", func(msg *nats.Msg) { t.Log("nats subj:", msg.Subject, "nats msg: ", string(msg.Data)) })
 		wait := make(chan struct{})
 		type action struct {
 			Action string
@@ -32,19 +58,24 @@ func TestSomething(t *testing.T) {
 			t.Logf("%+v", msg.Data)
 			wait <- struct{}{}
 		})
-		go Run(ctx, nc)
 
-		var res interface{}
+		// Start the server
+		Run(ctx, nc)
+
+		// Create the game
+		reqData, _ := json.Marshal(desert.NewGameData{Name: "foo"})
+		res, err := nc.RequestWithContext(ctx, "GAMES.NEW", reqData)
+		if err != nil {
+			log.Fatal(err)
+		}
+		t.Log("response: ", string(res.Data))
+
+		// Draw a card
 		a := action{"drawstorm"}
-		ec.RequestWithContext(ctx, "GAMES.NEW", desert.NewGameData{Name: "foo"}, res)
-		ec.Publish("GAME.0.ACTION", a)
+		actionData, _ := json.Marshal(a)
+		nc.Publish("GAME.0.ACTION", actionData)
 
-		ngd := desert.NewGameData{Name: "Foo"}
-		var response []byte
-		var foo interface{}
-		ec.Request("GAMES.NEW", ngd, foo, time.Second*2)
-		nc.Request("GAMES.LIST", response, time.Second*2)
-		t.Log(string(response))
+		// See if messages are published on the deck subject
 		select {
 		case <-wait:
 			t.Log("the function was called")

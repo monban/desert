@@ -12,16 +12,11 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-func Run(ctx context.Context, nc *nats.Conn) error {
+func Run(ctx context.Context, nc *nats.Conn) {
 	gm := &desert.GameManager{}
 	nc.Subscribe("GAMES.NEW", createNewGameHandler(nc, gm))
 	nc.Subscribe("GAMES.LIST", createGameListHandler(nc, gm))
 	nc.Subscribe("GAME.*.ACTION", createGameActionHandler(nc, gm))
-
-	<-ctx.Done()
-	log.Println("Draining connection")
-	nc.Drain()
-	return nil
 }
 
 func createGameActionHandler(nc *nats.Conn, gm *desert.GameManager) nats.MsgHandler {
@@ -43,7 +38,7 @@ func createGameActionHandler(nc *nats.Conn, gm *desert.GameManager) nats.MsgHand
 	}
 }
 
-func createNewGameHandler(nc *nats.Conn, gm *desert.GameManager) nats.MsgHandler {
+func createNewGameHandler(nc Publisher, gm *desert.GameManager) nats.MsgHandler {
 	return func(msg *nats.Msg) {
 		var ngd desert.NewGameData
 		if err := json.Unmarshal(msg.Data, &ngd); err != nil {
@@ -52,17 +47,26 @@ func createNewGameHandler(nc *nats.Conn, gm *desert.GameManager) nats.MsgHandler
 		}
 		log.Printf("Creating a new game: %+v", ngd)
 		g, _ := gm.NewGame(ngd)
-		createDeckBroadcaster(nc, g.Id, &g.StormDeck, "STORM")
-		createDeckBroadcaster(nc, g.Id, &g.StormDiscard, "STORM_DISCARD")
-		createDeckBroadcaster(nc, g.Id, &g.GearDeck, "GEAR")
-		createDeckBroadcaster(nc, g.Id, &g.GearDiscard, "GEAR_DISCARD")
+		createDeckBroadcaster(nc, g.Id, g.StormDeck, "STORM")
+		createDeckBroadcaster(nc, g.Id, g.StormDiscard, "STORM_DISCARD")
+		createDeckBroadcaster(nc, g.Id, g.GearDeck, "GEAR")
+		createDeckBroadcaster(nc, g.Id, g.GearDiscard, "GEAR_DISCARD")
 		msg.Respond([]byte(fmt.Sprintf("%+v", g.Id)))
 	}
 }
 
-func createDeckBroadcaster(nc *nats.Conn, gid desert.GameId, d *desert.Deck, deckName string) {
+type Publisher interface {
+	Publish(string, []byte) error
+}
+
+type DaWatcher interface {
+	Watch(func(desert.DeckAction))
+}
+
+func createDeckBroadcaster(nc Publisher, gid desert.GameId, d DaWatcher, deckName string) {
 	fn := func(a desert.DeckAction) {
 		subj := fmt.Sprintf("GAME.%d.DECKS.%v", gid, deckName)
+		log.Printf("Sending events for game %d deck %s to subject %s", gid, deckName, subj)
 		msg := fmt.Sprintf("%+v", a)
 		nc.Publish(subj, []byte(msg))
 	}
